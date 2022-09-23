@@ -19,6 +19,6 @@ public class SolarApplication {
 		return String.format("Hello %s!", name);
 	}
 
-	
+
 
 }
