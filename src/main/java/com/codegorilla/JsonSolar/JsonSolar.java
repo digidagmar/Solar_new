@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -21,9 +22,14 @@ public class JsonSolar {
     static final String MEASUREMENTS_PATH = "/CodeGorilla/measurements.json";
     static final String INVOICES_PATH = "/CodeGorilla/invoices.json";
 
-	private static List<Invoice> invoiceArr;
-	private static List<Measurement> measurementArr;
+	private static ArrayList<Invoice> invoiceArr;
+	private static ArrayList<Measurement> measurementArr;
 
+
+	public JsonSolar() {
+		invoiceArr = new ArrayList<Invoice>();
+		measurementArr = new ArrayList<Measurement>();
+	}
 	
 	public static void addInvoice( Invoice arg )
 	{
@@ -35,33 +41,37 @@ public class JsonSolar {
 		measurementArr.add(arg);		
 	}
 	
-	public static List<Invoice> getInvoices( )
+	public static ArrayList<Invoice> getInvoices( )
 	{
-		reutrn invoiceArr;
+		return invoiceArr;
 	}
 	
-	public static List<Measurement> getMeasurements( )
+	public static ArrayList<Measurement> getMeasurements( )
 	{
 		return measurementArr;		
 	}
 	
 	
-    public static String parseJsonInvoices( List<Invoice> list ) 
+    public static String parseJsonInvoices( ArrayList<Invoice> list )
     {
     	
 		String json = "";
-		
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
 		json = "{";
 		json += "\"invoices\": [ ";
-		
-		for( Invoice record: list ) {
-			json += "\"insert_date\" : ";
-			json += "\"" + record.getInvoiceDate() + "\", ";
-			json += "\"amount\" : ";
-			json += record.getInvoiceAmount() + ",";
-		}
-		if( list.size() > 0 ) {
-			json = json.substring(0, json.length() - 1);
+
+		if( list != null ) {
+			for (Invoice record : list) {
+				json += "{ \"insert_date\" : ";
+				json += "\"" + record.getInvoiceDate().format(formatter) + "\", ";
+				json += "\"amount\" : ";
+				json += record.getInvoiceAmount() + " } ,";
+			}
+			if (list.size() > 0) {
+				json = json.substring(0, json.length() - 1);
+			}
 		}
 		json += " ] } ";
 
@@ -70,7 +80,16 @@ public class JsonSolar {
     	
     }
 
-    public static String parseJsonMeasurements( List<Measurement> list ) 
+	public static String createInvoice( String jsonString )
+	{
+		// TODO
+
+		Invoice tmp;
+		tmp = new Invoice( LocalDate.parse("2012-06-09"), 345.89 );
+		invoiceArr.add(tmp);
+		return "Invoice Added";
+	}
+    public static String parseJsonMeasurements( ArrayList<Measurement> list )
     {
 		
 		String json = "";
@@ -98,8 +117,139 @@ public class JsonSolar {
 	
     }
 
-    private static void storeJsonInvoice(List<Invoice> list)
-    {    	   	
+	public static String createJsonInvoice( String jsonStr )
+	{
+		System.out.println("Json String: " + jsonStr );
+
+		JSONParser parser = new JSONParser();
+		JSONObject json;
+
+		try {
+			json = (JSONObject) parser.parse(jsonStr);
+
+		} catch (Exception e ) {
+			return "Could not parse JSON";
+		}
+
+		String invoiceDate;
+		invoiceDate = json.get("insert_date").toString();
+
+		String invoiceAmount;
+		invoiceAmount = json.get("amount").toString();
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+		Invoice temp;
+
+		temp = new Invoice(
+				LocalDate.parse( invoiceDate, formatter),
+				Double.parseDouble( invoiceAmount )
+		);
+
+		ArrayList<Invoice> invoices;
+
+		invoices =  JsonSolar.getInvoices();
+		for( int i = 0; i < invoices.size(); i++ ) {
+			if (invoices.get(i).getInvoiceDate().compareTo(temp.getInvoiceDate()) == 0 ) {
+				return "Invoice insert date already exists.";
+			}
+		}
+
+		addInvoice(temp);
+
+		return "Invoice Added.";
+	}
+
+	public static String deleteJsonInvoice( String jsonStr )
+	{
+		System.out.println("Json String: " + jsonStr );
+
+		JSONParser parser = new JSONParser();
+		JSONObject json;
+
+		try {
+			json = (JSONObject) parser.parse(jsonStr);
+
+		} catch (Exception e ) {
+			return "Could not parse JSON";
+		}
+
+		String invoiceDate;
+		invoiceDate = json.get("insert_date").toString();
+
+		String invoiceAmount;
+		invoiceAmount = json.get("amount").toString();
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+		Invoice temp;
+
+		temp = new Invoice(
+				LocalDate.parse( invoiceDate, formatter),
+				Double.parseDouble( invoiceAmount )
+		);
+
+		ArrayList<Invoice> invoices;
+
+		invoices =  JsonSolar.getInvoices();
+		for( int i = 0; i < invoices.size(); i++ ) {
+			if (invoices.get(i).getInvoiceDate().compareTo(temp.getInvoiceDate()) == 0 ) {
+				invoiceArr.remove(i);
+				return "Invoice deleted";
+			}
+		}
+
+		return "Invoice does not exists.";
+	}
+
+	public static String updateJsonInvoice( String jsonStr )
+	{
+		System.out.println("Json String: " + jsonStr );
+
+		JSONParser parser = new JSONParser();
+		JSONObject json;
+
+		try {
+			json = (JSONObject) parser.parse(jsonStr);
+
+		} catch (Exception e ) {
+			return "Could not parse JSON";
+		}
+
+		String invoiceDate;
+		invoiceDate = json.get("insert_date").toString();
+
+		String invoiceAmount;
+		invoiceAmount = json.get("amount").toString();
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+		Invoice temp;
+
+		temp = new Invoice(
+				LocalDate.parse( invoiceDate, formatter),
+				Double.parseDouble( invoiceAmount )
+		);
+
+		ArrayList<Invoice> invoices;
+
+		invoices =  JsonSolar.getInvoices();
+		for( int i = 0; i < invoices.size(); i++ ) {
+			if (invoices.get(i).getInvoiceDate().compareTo(temp.getInvoiceDate()) == 0 ) {
+				Invoice replaceVar = invoices.get(i);
+				replaceVar.setInvoiceAmount(Double.parseDouble(invoiceAmount));
+				invoiceArr.remove(i);
+				invoiceArr.add(replaceVar);
+				return "Invoice updated";
+			}
+		}
+
+		return "Invoice does not exists.";
+	}
+
+
+	private static void storeJsonInvoice(ArrayList<Invoice> list)
+    {
     	String filePath;
     	String jsonText = "";
     	
@@ -131,7 +281,7 @@ public class JsonSolar {
     	
     }
     
-    private static void storeJsonMeasurement(List<Measurement> list)
+    private static void storeJsonMeasurement(ArrayList<Measurement> list)
     {    	   	
     	String filePath;
     	String jsonText = "";
@@ -191,7 +341,7 @@ public class JsonSolar {
         return contentBuilder.toString();
     }
     
-    private static void readJsonInvoice(List<Invoice> list)
+    private static void readJsonInvoice(ArrayList<Invoice> list)
     {
     	String filePath;
     	String fileData;
@@ -203,7 +353,6 @@ public class JsonSolar {
     	
 		JSONParser parser = new JSONParser();
 		JSONObject json = null;	
-
 
 		try {
 			json = (JSONObject) parser.parse(fileData);
@@ -235,7 +384,7 @@ public class JsonSolar {
 		
 
     }
-    private static void readJsonMeasurement(List<Measurement> list)
+    private static void readJsonMeasurement(ArrayList<Measurement> list)
     {
     	String filePath;
     	String fileData;
